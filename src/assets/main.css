@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-ctp-base;
+}
+
+html, body, #app {
+  height: 100%;
+}
+
+.grad-text {
+  @apply bg-gradient-to-r text-transparent bg-clip-text;
+}
