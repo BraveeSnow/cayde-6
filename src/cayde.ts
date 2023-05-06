@@ -1,6 +1,7 @@
 import path from "path";
 import dotenv from "dotenv";
 import {
+    APIChatInputApplicationCommandInteraction,
     APIInteraction,
     ActivityType,
     GatewayDispatchEvents,
@@ -38,7 +39,7 @@ async function startCayde(token: string): Promise<void> {
             return;
         }
 
-        await cmd.exec(props.api, props.data);
+        await cmd.exec(props.api, props.data as APIChatInputApplicationCommandInteraction);
     });
     cayde.on(GatewayDispatchEvents.Ready, () => {
         log("Cayde-6 is ready");
@@ -60,7 +61,6 @@ async function startCayde(token: string): Promise<void> {
             });
         });
     });
-    cayde;
 }
 
 dotenv.config();

@@ -1,15 +1,19 @@
-import { Dirent, readdirSync } from "fs";
+import { readdirSync } from "fs";
 import path from "path";
 import url from "url";
 
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { API, APIInteraction, Client } from "@discordjs/core";
+import {
+    API,
+    APIChatInputApplicationCommandInteraction,
+    Client,
+    RESTPostAPIChatInputApplicationCommandsJSONBody,
+} from "@discordjs/core";
 
 import { log, Severity } from "@cayde/common/log";
 
 export interface Command {
-    data: SlashCommandBuilder;
-    exec(api: API, data: APIInteraction): Promise<void>;
+    data: RESTPostAPIChatInputApplicationCommandsJSONBody;
+    exec(api: API, int: APIChatInputApplicationCommandInteraction): Promise<void>;
 }
 
 export class CaydeClient extends Client {
@@ -20,9 +24,7 @@ export class CaydeClient extends Client {
     }
 
     loadCommands(commandPath: string): void {
-        const entries: Dirent[] = readdirSync(commandPath, { withFileTypes: true });
-
-        for (const entry of entries) {
+        for (const entry of readdirSync(commandPath, { withFileTypes: true })) {
             const entryPath: string = path.join(commandPath, entry.name);
 
             if (entry.isDirectory()) {
@@ -47,6 +49,11 @@ export class CaydeClient extends Client {
                 .then((imp) => imp.default.default)
                 .then((cmd: Command) => {
                     this.commandMap.set(cmd.data.name.toLowerCase(), cmd);
+                    this.api.applicationCommands.createGuildCommand(
+                        "694828817457479731",
+                        "799141153260961802",
+                        cmd.data
+                    );
                 });
         }
     }

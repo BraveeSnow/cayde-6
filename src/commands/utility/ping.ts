@@ -1,12 +1,12 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { API, APIInteraction, MessageFlags } from "@discordjs/core";
+import { API, APIChatInputApplicationCommandInteraction, MessageFlags } from "@discordjs/core";
 
 import { Command } from "@cayde/common/client";
 
 const command: Command = {
-    data: new SlashCommandBuilder().setName("ping"),
-    async exec(api: API, data: APIInteraction) {
-        await api.interactions.reply(data.id, data.token, {
+    data: new SlashCommandBuilder().setName("ping").setDescription("Replies with 'Pong!'").toJSON(),
+    async exec(api: API, int: APIChatInputApplicationCommandInteraction) {
+        await api.interactions.reply(int.id, int.token, {
             content: "Pong!",
             flags: MessageFlags.Ephemeral,
         });
