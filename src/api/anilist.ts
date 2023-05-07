@@ -4,14 +4,15 @@ const ANILIST_URL = "https://graphql.anilist.co";
 
 // GraphQL queries
 const ANILIST_QUERY_TITLE = `
-query ($title: String) {
-	Media (search: $title, type: ANIME) {
+query ($title: String, $type: MediaType) {
+	Media (search: $title, type: $type) {
 		siteUrl
         title {
 			english
 			native
         }
 		episodes
+        volumes
 		averageScore
 		type
 		status (version: 2)
@@ -26,7 +27,6 @@ query ($title: String) {
 			month
 			day
 		}
-		season
 		description (asHtml: false)
 		coverImage {
 			extraLarge
@@ -45,6 +45,7 @@ interface RawAnilistQueryResponse {
                 native: string;
             };
             episodes: number;
+            volumes: number;
             averageScore: number;
             type: string;
             status: string;
@@ -59,7 +60,6 @@ interface RawAnilistQueryResponse {
                 month: number;
                 day: number;
             };
-            season: string;
             description: string;
             coverImage: {
                 extraLarge: string;
@@ -82,27 +82,19 @@ export enum ALStatus {
     HIATUS = "HAITUS",
 }
 
-export enum ALSeason {
-    WINTER = "WINTER",
-    SPRING = "SPRING",
-    SUMMER = "SUMMER",
-    FALL = "FALL",
-}
-
 export interface AnilistQueryResponse {
     siteUrl: URL;
     title: {
         english: string;
         native: string;
     };
-    episodes: number;
+    episodes: number; // Also used as volume count
     averageScore: number;
     type: ALType;
     status: ALStatus;
     isAdult: boolean;
     startDate: Date;
     endDate: Date;
-    season: ALSeason;
     description: string;
     coverImage: URL;
 }
@@ -117,7 +109,7 @@ function convertRaw(response: RawAnilistQueryResponse): AnilistQueryResponse {
     return {
         siteUrl: new URL(response.data.Media.siteUrl),
         title: response.data.Media.title,
-        episodes: response.data.Media.episodes,
+        episodes: response.data.Media.type == ALType.ANIME ? response.data.Media.episodes : response.data.Media.volumes,
         averageScore: response.data.Media.averageScore,
         type: response.data.Media.type as ALType,
         status: response.data.Media.status as ALStatus,
@@ -132,13 +124,12 @@ function convertRaw(response: RawAnilistQueryResponse): AnilistQueryResponse {
             response.data.Media.endDate.month,
             response.data.Media.endDate.day
         ),
-        season: response.data.Media.season as ALSeason,
         description: desc,
         coverImage: new URL(response.data.Media.coverImage.extraLarge),
     };
 }
 
-export async function searchByTitle(title: string): Promise<AnilistQueryResponse> {
+export async function searchByTitle(title: string, type: ALType): Promise<AnilistQueryResponse> {
     const res = await axios({
         url: ANILIST_URL,
         method: "POST",
@@ -150,6 +141,7 @@ export async function searchByTitle(title: string): Promise<AnilistQueryResponse
             query: ANILIST_QUERY_TITLE,
             variables: {
                 title: title,
+                type: type,
             },
         },
     });
