@@ -37,7 +37,6 @@ const command: Command = {
             method: "GET",
             responseType: "arraybuffer",
         });
-        console.log(res);
 
         if (res.status != 200) {
             return await api.interactions.reply(int.id, int.token, {
