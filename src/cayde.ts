@@ -26,7 +26,7 @@ async function startCayde(token: string): Promise<void> {
         rest,
     });
 
-    const cayde = new CaydeClient({ rest: rest, ws: gateway });
+    const cayde = new CaydeClient({ rest, gateway });
     cayde.loadCommands(path.join(process.cwd(), "./dist/commands"));
 
     cayde.on(GatewayDispatchEvents.InteractionCreate, async (props: WithIntrinsicProps<APIInteraction>) => {
@@ -46,7 +46,7 @@ async function startCayde(token: string): Promise<void> {
     });
 
     await gateway.connect();
-    cayde.ws.getShardIds().then((ids: number[]) => {
+    gateway.getShardIds().then((ids: number[]) => {
         ids.forEach((shardId: number) => {
             cayde.updatePresence(shardId, {
                 status: PresenceUpdateStatus.Online,

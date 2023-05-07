@@ -37,23 +37,20 @@ export class CaydeClient extends Client {
                 continue;
             }
 
-            const commandName: string = entry.name.split(".")[0];
-
-            if (this.commandMap.has(commandName)) {
-                log(`Command with name ${commandName} already exists, consider renaming`, Severity.WARN);
-                continue;
-            }
-
             log(`Loading command from ${entryPath}`);
             import(url.pathToFileURL(entryPath).toString())
                 .then((imp) => imp.default.default)
                 .then((cmd: Command) => {
-                    this.commandMap.set(cmd.data.name.toLowerCase(), cmd);
-                    this.api.applicationCommands.createGuildCommand(
-                        "694828817457479731",
-                        "799141153260961802",
-                        cmd.data
-                    );
+                    if (this.commandMap.has(cmd.data.name)) {
+                        log(`Command with name ${cmd.data.name} already exists, consider renaming`, Severity.WARN);
+                    } else {
+                        this.commandMap.set(cmd.data.name.toLowerCase(), cmd);
+                        this.api.applicationCommands.createGuildCommand(
+                            "694828817457479731",
+                            "799141153260961802",
+                            cmd.data
+                        );
+                    }
                 });
         }
     }
