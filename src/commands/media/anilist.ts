@@ -4,6 +4,7 @@ import {
     APIApplicationCommandInteractionDataSubcommandOption,
     APIChatInputApplicationCommandInteraction,
     ChannelType,
+    MessageFlags,
 } from "@discordjs/core";
 
 import { ALStatus, ALType, AnilistQueryResponse, searchByTitle } from "@cayde/api/anilist";
@@ -48,7 +49,7 @@ const command: Command = {
         )
         .toJSON(),
     async exec(api: API, int: APIChatInputApplicationCommandInteraction) {
-        if (!int.data.options || int.data.options.length == 0) {
+        if (!int.data.options) {
             return;
         }
 
@@ -73,11 +74,10 @@ const command: Command = {
                 return;
         }
 
-        console.log(query);
-
         if (query.isAdult && int.channel.type == ChannelType.GuildText && !int.channel.nsfw) {
             return api.interactions.reply(int.id, int.token, {
                 content: "The anime found is rated 18+, please use NSFW channels.",
+                flags: MessageFlags.Ephemeral,
             });
         }
 
