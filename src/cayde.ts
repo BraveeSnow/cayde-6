@@ -5,6 +5,7 @@ import {
     APIInteraction,
     ActivityType,
     GatewayDispatchEvents,
+    GatewayGuildCreateDispatchData,
     GatewayIntentBits,
     InteractionType,
     PresenceUpdateStatus,
@@ -13,6 +14,7 @@ import {
 import { REST } from "@discordjs/rest";
 import { WebSocketManager } from "@discordjs/ws";
 
+import { createServer } from "@cayde/server";
 import { CaydeClient } from "@cayde/common/client";
 import { log } from "@cayde/common/log";
 
@@ -22,12 +24,22 @@ async function startCayde(token: string): Promise<void> {
     }).setToken(token);
     const gateway = new WebSocketManager({
         token: token,
-        intents: GatewayIntentBits.GuildMessages | GatewayIntentBits.MessageContent,
+        intents: GatewayIntentBits.Guilds | GatewayIntentBits.GuildMessages | GatewayIntentBits.MessageContent,
         rest,
     });
 
-    const cayde = new CaydeClient({ rest, gateway });
-    cayde.loadCommands(path.join(process.cwd(), "./dist/commands"));
+    const cayde = new CaydeClient({
+        rest: rest,
+        ws: gateway,
+        db: {
+            host: "localhost",
+            port: 3306,
+            user: process.env.DB_USERNAME,
+            password: process.env.DB_PASSWORD,
+            database: "cayde-6",
+        },
+    });
+    await cayde.loadCommands(path.join(process.cwd(), "./dist/commands"));
 
     cayde.on(GatewayDispatchEvents.InteractionCreate, async (props: WithIntrinsicProps<APIInteraction>) => {
         if (props.data.type !== InteractionType.ApplicationCommand) {
@@ -40,6 +52,11 @@ async function startCayde(token: string): Promise<void> {
         }
 
         await cmd.exec(props.api, props.data as APIChatInputApplicationCommandInteraction);
+    });
+    cayde.on(GatewayDispatchEvents.GuildCreate, (props: WithIntrinsicProps<GatewayGuildCreateDispatchData>) => {
+        // This function fires when bot starts up for all inhabited guilds
+        log(`Registering commands for guild ${props.data.name} with ID ${props.data.id}`);
+        cayde.registerCommands(props.data.id);
     });
     cayde.on(GatewayDispatchEvents.Ready, () => {
         log("Cayde-6 is ready");
@@ -61,6 +78,8 @@ async function startCayde(token: string): Promise<void> {
             });
         });
     });
+
+    createServer(cayde);
 }
 
 dotenv.config();
