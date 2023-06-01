@@ -2,8 +2,7 @@ import { readdirSync } from "fs";
 import path from "path";
 import url from "url";
 
-import { createPool, PoolOptions } from "mysql2";
-import { PoolConnection } from "mysql2/promise";
+import { PoolOptions } from "mysql2";
 import {
   API,
   APIChatInputApplicationCommandInteraction,
